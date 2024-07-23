@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        let canvas, engine, camera;
+        let scene;
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            canvas = document.getElementById("gameCanvas"); // Get the canvas element
+            engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+            scene = new BABYLON.Scene(engine);
+            camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 4 * Math.PI, 0), scene);
+            camera.attachControl(canvas, true);
+            camera.wheelPrecision = 50;
+            camera.lowerRadiusLimit = 1;
+            camera.upperRadiusLimit = 26;
+
+            let light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            light1.intensity = 0.5;
+            let light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 0, -4), scene);
+            light2.intensity = 0.5;
+            light2.parent = camera;
+
+
+            let radius1 = 5;
+            let radius2 = 2.5;
+            let radius3 = 1.25;
+
+            var baseCircle = BABYLON.MeshBuilder.CreateSphere("sphere", {
+                segment: 32, diameter: radius1
+            }, scene);
+            var baseCircle2 = BABYLON.MeshBuilder.CreateSphere("sphere1", {
+                segment: 32, diameter: radius2
+            }, scene);
+            var baseCircle3 = BABYLON.MeshBuilder.CreateSphere("sphere2", {
+                segment: 32, diameter: radius3
+            }, scene);
+            
+            baseCircle.color = new BABYLON.Color3(1, 0, 0);
+            baseCircle2.color = new BABYLON.Color3(0, 1, 0);
+            baseCircle3.color = new BABYLON.Color3(1, 1, 0);
+
+            let angle = 0;
+
+            scene.registerBeforeRender(() => {
+                angle += 0.01;
+                baseCircle2.position.x = radius1 * Math.cos(angle);
+                baseCircle2.position.z = radius1 * Math.sin(angle);
+
+                baseCircle3.position.x = baseCircle2.position.x + radius2 * Math.cos(angle * 2);
+                baseCircle3.position.z = baseCircle2.position.z + radius2 * Math.sin(angle * 2);
+            });
+
+            // Main loop
+            engine.runRenderLoop(() => scene.render());
+
+            // Resize event
+            window.addEventListener("resize", () => engine.resize());
+        });
+    </script>
+
+    <style>
+        #gameCanvas {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</body>
+
+</html>

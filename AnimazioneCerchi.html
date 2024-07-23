@@ -11,13 +11,31 @@
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
     <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
-    
+
     <canvas id="gameCanvas"></canvas>
 
     <script>
         let canvas, engine, camera;
         let scene;
 
+        class circle {
+            constructor(radius) {
+                this.radius = radius
+                this.points = this.InitializeCircle();
+            }
+
+            InitializeCircle() {
+                let points = [];
+                for (let i = -Math.PI; i <= Math.PI; i += Math.PI / 360) {
+                    points.push(new BABYLON.Vector3(this.radius * Math.cos(i), 0, this.radius * Math.sin(i)));
+                }
+                return points;
+            }
+
+            GetPoints() {
+                return this.points
+            }
+        }
         window.addEventListener('DOMContentLoaded', (event) => {
             canvas = document.getElementById("gameCanvas"); // Get the canvas element
             engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
@@ -35,47 +53,23 @@
             light2.intensity = 0.5;
             light2.parent = camera;
 
-            // var cerchio1 = [];
-            // var cerchio2 = [];
-            // var cerchio3 = [];
 
-            var radius1 = 5;
-            var radius2 = 2.5;
-            var radius3 = 1.25;
+            let radiuses = [5, 2.5, 1.5]
+            let circles = [];
 
-            // for (var i = -Math.PI; i <= Math.PI; i += Math.PI / 360) {
-            //     cerchio1.push(new BABYLON.Vector3(radius1 * Math.cos(i), 0, radius1 * Math.sin(i)));
-            //     cerchio2.push(new BABYLON.Vector3(radius2 * Math.cos(i), 0, radius2 * Math.sin(i)));
-            //     cerchio3.push(new BABYLON.Vector3(radius3 * Math.cos(i), 0, radius3 * Math.sin(i)));
-            // }
-
-            // var baseCircle = BABYLON.Mesh.CreateLines("baseCircle", cerchio1, scene);
-            // var baseCircle2 = BABYLON.Mesh.CreateLines("baseCircle2", cerchio2, scene);
-            // var baseCircle3 = BABYLON.Mesh.CreateLines("baseCircle3", cerchio3, scene);
-           
-            var baseCircle = BABYLON.MeshBuilder.CreateSphere("sphere", {
-                segment: 32, diameter: radius1
-            }, scene);
-            var baseCircle2 = BABYLON.MeshBuilder.CreateSphere("sphere1", {
-                segment: 32, diameter: radius2
-            }, scene);
-            var baseCircle3 = BABYLON.MeshBuilder.CreateSphere("sphere2", {
-                segment: 32, diameter: radius3
-            }, scene);
-           
-            baseCircle.color = new BABYLON.Color3(1, 0, 0);
-            baseCircle2.color = new BABYLON.Color3(0, 1, 0);
-            baseCircle3.color = new BABYLON.Color3(1, 1, 0);
+            for(let i=0; i<3; i++){
+                circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, new circle(radiuses[i]).GetPoints(), scene));
+            }
 
             let angle = 0;
 
             scene.registerBeforeRender(() => {
                 angle += 0.01;
-                baseCircle2.position.x = radius1 * Math.cos(angle);
-                baseCircle2.position.z = radius1 * Math.sin(angle);
+                circles[1].position.x = radiuses[0] * Math.cos(angle);
+                circles[1].position.z = radiuses[0] * Math.sin(angle);
 
-                baseCircle3.position.x = baseCircle2.position.x + radius2 * Math.cos(angle * 2);
-                baseCircle3.position.z = baseCircle2.position.z + radius2 * Math.sin(angle * 2);
+                circles[2].position.x =  circles[1].position.x + radiuses[1] * Math.cos(angle * 2);
+                circles[2].position.z =  circles[1].position.z + radiuses[1] * Math.sin(angle * 2);
             });
 
             // Main loop
