@@ -8,67 +8,86 @@
 </head>
 
 <body>
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
-    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
-    
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        let canvas, engine, camera;
-        let scene;
+        let canvas, engine, camera, scene, sunPivot, earthPivot, moonPivot, sun, earth, moon;
 
-        window.addEventListener('DOMContentLoaded', (event) => {
-            canvas = document.getElementById("gameCanvas"); // Get the canvas element
-            engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
-
+        window.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById("gameCanvas");
+            engine = new BABYLON.Engine(canvas, true);
             scene = new BABYLON.Scene(engine);
-            camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 4 * Math.PI, 0), scene);
+
+            // Creare la camera
+            camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 4, 20, BABYLON.Vector3.Zero(), scene);
             camera.attachControl(canvas, true);
             camera.wheelPrecision = 50;
             camera.lowerRadiusLimit = 1;
-            camera.upperRadiusLimit = 26;
+            camera.upperRadiusLimit = 100;
 
-            let light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
-            light1.intensity = 0.5;
+            // Creare le luci
+            new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene).intensity = 0.5;
             let light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 0, -4), scene);
             light2.intensity = 0.5;
             light2.parent = camera;
+        
 
+            // Creare i nodi di trasformazione
+            cameraPivot = new BABYLON.TransformNode('camPivot', scene)
+            sunPivot = new BABYLON.TransformNode('sunPivot', scene);
+            earthPivot = new BABYLON.TransformNode('earthPivot', scene);
+            earthPivot.parent = sunPivot;
+            moonPivot = new BABYLON.TransformNode('moonPivot', scene);
+            moonPivot.parent = earthPivot;
+            camera.parent = cameraPivot;
 
-            let radius1 = 5;
-            let radius2 = 2.5;
-            let radius3 = 1.25;
-
-            var baseCircle = BABYLON.MeshBuilder.CreateSphere("sphere", {
-                segment: 32, diameter: radius1
-            }, scene);
-            var baseCircle2 = BABYLON.MeshBuilder.CreateSphere("sphere1", {
-                segment: 32, diameter: radius2
-            }, scene);
-            var baseCircle3 = BABYLON.MeshBuilder.CreateSphere("sphere2", {
-                segment: 32, diameter: radius3
-            }, scene);
+            // Creare un grande piano dietro la scena e applicare una texture
             
-            baseCircle.color = new BABYLON.Color3(1, 0, 0);
-            baseCircle2.color = new BABYLON.Color3(0, 1, 0);
-            baseCircle3.color = new BABYLON.Color3(1, 1, 0);
+            scene.clearColor = new BABYLON.Color3(0, 0, 0)
+            // Caricare i modelli
+            let radius1 = 7;
+            let radius2 = 2;
 
-            let angle = 0;
-
-            scene.registerBeforeRender(() => {
-                angle += 0.01;
-                baseCircle2.position.x = radius1 * Math.cos(angle);
-                baseCircle2.position.z = radius1 * Math.sin(angle);
-
-                baseCircle3.position.x = baseCircle2.position.x + radius2 * Math.cos(angle * 2);
-                baseCircle3.position.z = baseCircle2.position.z + radius2 * Math.sin(angle * 2);
+            BABYLON.SceneLoader.ImportMesh("", "files/", "sun.glb", scene, function (meshes) {
+                sun = meshes[0];
+                sun.parent = sunPivot;
+                sun.scaling = new BABYLON.Vector3(2, 2, 2);
             });
 
-            // Main loop
-            engine.runRenderLoop(() => scene.render());
+            BABYLON.SceneLoader.ImportMesh("", "files/", "earth.glb", scene, function (meshes) {
+                earth = meshes[0];
+                earth.parent = earthPivot;
+                earthPivot.position.x = radius1;
+                earth.scaling = new BABYLON.Vector3(1, 1, 1);
+            });
 
-            // Resize event
+            BABYLON.SceneLoader.ImportMesh("", "files/", "moon.glb", scene, function (meshes) {
+                moon = meshes[0];
+                moon.parent = moonPivot;
+                moonPivot.position.x = radius2;
+                moon.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+            });
+
+            // Animare i modelli
+            let angle = 0;
+            scene.registerBeforeRender(() => {
+                angle += 0.01;
+                earthPivot.position.x = radius1 * Math.cos(angle);
+                earthPivot.position.z = radius1 * Math.sin(angle);
+
+                moonPivot.position.x = radius2 * Math.cos(5 * angle);
+                moonPivot.position.z = radius2 * Math.sin(5 * angle);
+
+                if (earth) earth.rotation.y += 0.01;
+                if (sun) sunPivot.rotation.y += 0.002;
+            });
+
+            engine.runRenderLoop(() => scene.render());
             window.addEventListener("resize", () => engine.resize());
         });
     </script>
