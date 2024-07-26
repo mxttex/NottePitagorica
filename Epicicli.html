@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        let canvas, engine, camera;
+        let scene;
+
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            canvas = document.getElementById("gameCanvas"); // Get the canvas element
+            engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
+
+            scene = new BABYLON.Scene(engine);
+            camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 4 * Math.PI, 0), scene);
+            camera.attachControl(canvas, true);
+            camera.wheelPrecision = 50;
+            camera.lowerRadiusLimit = 1;
+            camera.upperRadiusLimit = 26;
+
+            let light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
+            light1.intensity = 0.5;
+            let light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 0, -4), scene);
+            light2.intensity = 0.5;
+            light2.parent = camera;
+
+
+            let radiuses = [2, 1, 0.5]
+            const firstEpicycle = new Epiciclo(radiuses)
+            radiuses = [4, 1, 0.5]
+            const secondEpicycle = new Epiciclo(radiuses)
+            radiuses = [6, 1, 0.5]
+            const thirdEpicycle = new Epiciclo(radiuses)
+            let angle = 0;
+
+            scene.registerBeforeRender(() => {
+                angle += 0.01;
+                firstEpicycle.Animation(angle)
+                secondEpicycle.Animation(angle * 2)
+                thirdEpicycle.Animation(angle * 2.5)
+            });
+
+            // Main loop
+            engine.runRenderLoop(() => scene.render());
+
+            // Resize event
+            window.addEventListener("resize", () => engine.resize());
+        });
+
+
+        class Epiciclo {
+            constructor(radiuses) {
+                this.radiuses = radiuses;
+                this.circles = [];
+                this.centre = BABYLON.MeshBuilder.CreateSphere("sphere", {
+                    segment: 32, diameter: 0.5
+                }, scene);
+                this.pivot = new BABYLON.TransformNode('centre', scene);
+                this.planet = BABYLON.MeshBuilder.CreateSphere("sphere", {
+                    segment: 32, diameter: 0.25
+                }, scene);
+                this.lines = null;
+                this.InitializeEpicycle()
+            }
+
+            InitializeEpicycle() {
+                this.pivot.position.x = this.pivot.position.y = 0
+                for (let i = 0; i < 3; i++) {
+                    this.circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, new circle(this.radiuses[i]).GetPoints(), scene));
+                }
+                this.centre.parent = this.pivot;
+            }
+            Animation(angle) {
+                if(this.lines != null){
+                    this.lines.dispose();
+                }
+                const points = [
+                    this.centre.position,
+                    this.planet.position
+                ];
+                this.lines = BABYLON.MeshBuilder.CreateLines("lines", { points: points }, scene); this.circles[1].position.x = this.radiuses[0] * Math.cos(angle);
+                this.circles[1].position.z = this.radiuses[0] * Math.sin(angle);
+
+                this.circles[2].position.x = this.circles[1].position.x + this.radiuses[1] * Math.cos(angle * 2);
+                this.circles[2].position.z = this.circles[1].position.z + this.radiuses[1] * Math.sin(angle * 2);
+
+                this.planet.position.x = this.circles[2].position.x + this.radiuses[2] * Math.cos(angle * 2);
+                this.planet.position.z = this.circles[2].position.z + this.radiuses[2] * Math.sin(angle * 2);
+            }
+        }
+        class circle {
+            constructor(radius) {
+                this.radius = radius
+                this.points = this.InitializeCircle();
+            }
+
+            InitializeCircle() {
+                let points = [];
+                for (let i = -Math.PI; i <= Math.PI; i += Math.PI / 360) {
+                    points.push(new BABYLON.Vector3(this.radius * Math.cos(i), 0, this.radius * Math.sin(i)));
+                }
+                return points;
+            }
+
+            GetPoints() {
+                return this.points
+            }
+        }
+    </script>
+
+    <style>
+        #gameCanvas {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</body>
+
+</html>
