@@ -25,7 +25,9 @@
             engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
             scene = new BABYLON.Scene(engine);
-            camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 4 * Math.PI, 0), scene);
+            scene.clearColor = new BABYLON.Color3(0, 0, 0)
+
+            camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 7 * Math.PI, 0), scene);
             camera.attachControl(canvas, true);
             camera.wheelPrecision = 50;
             camera.lowerRadiusLimit = 1;
@@ -37,20 +39,28 @@
             light2.intensity = 0.5;
             light2.parent = camera;
 
+            const centre = new Centre()
 
-            let radiuses = [2, 1, 0.5]
-            const firstEpicycle = new Epiciclo(radiuses)
+            let radiuses = [1, 1, 0.5]
+            const firstEpicycle = new Epiciclo(radiuses, centre)
             radiuses = [4, 1, 0.5]
-            const secondEpicycle = new Epiciclo(radiuses)
-            radiuses = [6, 1, 0.5]
-            const thirdEpicycle = new Epiciclo(radiuses)
+            const secondEpicycle = new Epiciclo(radiuses, centre)
+            radiuses = [5, 1, 0.5]
+            const thirdEpicycle = new Epiciclo(radiuses, centre)
+            radiuses = [6.98, 1, 0.5]
+            const fourthEpicycle = new Epiciclo(radiuses, centre)
+            radiuses = [11, 1, 0.5]
+            const fifthEpicycle = new Epiciclo(radiuses, centre)
             let angle = 0;
 
             scene.registerBeforeRender(() => {
                 angle += 0.01;
-                firstEpicycle.Animation(angle)
-                secondEpicycle.Animation(angle * 2)
+                centre.Animation(angle * 12)
+                firstEpicycle.Animation(angle * 13.5)
+                secondEpicycle.Animation(angle * 13)
                 thirdEpicycle.Animation(angle * 2.5)
+                fourthEpicycle.Animation(angle * 2)
+                fifthEpicycle.Animation(angle)
             });
 
             // Main loop
@@ -60,15 +70,25 @@
             window.addEventListener("resize", () => engine.resize());
         });
 
-
-        class Epiciclo {
-            constructor(radiuses) {
-                this.radiuses = radiuses;
-                this.circles = [];
-                this.centre = BABYLON.MeshBuilder.CreateSphere("sphere", {
+        class Centre{
+            constructor(){
+                this.pivot =  new BABYLON.TransformNode('centre', scene);
+                this.sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
                     segment: 32, diameter: 0.5
                 }, scene);
-                this.pivot = new BABYLON.TransformNode('centre', scene);
+                this.sphere.parent = this.pivot;
+            }
+
+            Animation(angle){
+                this.pivot.position.x = Math.cos(angle);
+                this.pivot.position.z = Math.sin(angle)
+            }
+        }
+        class Epiciclo {
+            constructor(radiuses, centre) {
+                this.radiuses = radiuses;
+                this.circles = [];
+                this.pivot = centre.pivot;
                 this.planet = BABYLON.MeshBuilder.CreateSphere("sphere", {
                     segment: 32, diameter: 0.25
                 }, scene);
@@ -81,14 +101,14 @@
                 for (let i = 0; i < 3; i++) {
                     this.circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, new circle(this.radiuses[i]).GetPoints(), scene));
                 }
-                this.centre.parent = this.pivot;
+                // this.centre.parent = this.pivot;
             }
             Animation(angle) {
                 if(this.lines != null){
                     this.lines.dispose();
                 }
                 const points = [
-                    this.centre.position,
+                    this.pivot.position,
                     this.planet.position
                 ];
                 this.lines = BABYLON.MeshBuilder.CreateLines("lines", { points: points }, scene); this.circles[1].position.x = this.radiuses[0] * Math.cos(angle);
