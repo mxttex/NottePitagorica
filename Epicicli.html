@@ -8,9 +8,10 @@
 </head>
 
 <body>
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/babylon.max.js"></script>
-    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
 
 
     <canvas id="gameCanvas"></canvas>
@@ -39,23 +40,33 @@
             light2.intensity = 0.5;
             light2.parent = camera;
 
-            const centre = new Centre()
+            // const centre = new Centre()
+            var sun, pivot;
+            pivot = new BABYLON.TransformNode('centre', scene);
+            BABYLON.SceneLoader.ImportMesh("", "files/", "sun.glb", scene, function (meshes) {
+                sun = meshes[0];
+                sun.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2);
+                sun.parent = pivot;
+            });
+            
 
             let radiuses = [1, 1, 0.5]
-            const firstEpicycle = new Epiciclo(radiuses, centre)
+            const firstEpicycle = new Epiciclo(radiuses, pivot)
             radiuses = [4, 1, 0.5]
-            const secondEpicycle = new Epiciclo(radiuses, centre)
+            const secondEpicycle = new Epiciclo(radiuses, pivot)
             radiuses = [5, 1, 0.5]
-            const thirdEpicycle = new Epiciclo(radiuses, centre)
+            const thirdEpicycle = new Epiciclo(radiuses, pivot)
             radiuses = [6.98, 1, 0.5]
-            const fourthEpicycle = new Epiciclo(radiuses, centre)
+            const fourthEpicycle = new Epiciclo(radiuses, pivot)
             radiuses = [11, 1, 0.5]
-            const fifthEpicycle = new Epiciclo(radiuses, centre)
+            const fifthEpicycle = new Epiciclo(radiuses, pivot)
             let angle = 0;
 
             scene.registerBeforeRender(() => {
                 angle += 0.01;
-                centre.Animation(angle * 12)
+
+                pivot.position.x = Math.cos(angle*12);
+                pivot.position.z = Math.sin(angle * 12)
                 firstEpicycle.Animation(angle * 13.5)
                 secondEpicycle.Animation(angle * 13)
                 thirdEpicycle.Animation(angle * 2.5)
@@ -70,25 +81,29 @@
             window.addEventListener("resize", () => engine.resize());
         });
 
-        class Centre{
-            constructor(){
-                this.pivot =  new BABYLON.TransformNode('centre', scene);
-                this.sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
-                    segment: 32, diameter: 0.5
-                }, scene);
-                this.sphere.parent = this.pivot;
-            }
+        // class Centre {
+        //     constructor() {
+        //         this.pivot = new BABYLON.TransformNode('centre', scene);
+        //         // this.sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
+        //         //     segment: 32, diameter: 0.5
+        //         // }, scene);
+        //         this.sphere = null;
+        //         BABYLON.SceneLoader.ImportMesh("", "files/", "sun.glb", scene, function (meshes) {
+        //             sphere = meshes[0];
+        //         });
+        //         this.sphere.parent = this.pivot;
+        //     }
 
-            Animation(angle){
-                this.pivot.position.x = Math.cos(angle);
-                this.pivot.position.z = Math.sin(angle)
-            }
-        }
+        //     Animation(angle) {
+        //         this.pivot.position.x = Math.cos(angle);
+        //         this.pivot.position.z = Math.sin(angle)
+        //     }
+        // }
         class Epiciclo {
-            constructor(radiuses, centre) {
+            constructor(radiuses, pivot) {
                 this.radiuses = radiuses;
                 this.circles = [];
-                this.pivot = centre.pivot;
+                this.pivot = pivot;
                 this.planet = BABYLON.MeshBuilder.CreateSphere("sphere", {
                     segment: 32, diameter: 0.25
                 }, scene);
@@ -104,7 +119,7 @@
                 // this.centre.parent = this.pivot;
             }
             Animation(angle) {
-                if(this.lines != null){
+                if (this.lines != null) {
                     this.lines.dispose();
                 }
                 const points = [
