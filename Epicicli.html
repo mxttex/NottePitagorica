@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
-
 <body>
     <script src="https://preview.babylonjs.com/babylon.js"></script>
     <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
     <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
     <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
-
 
     <canvas id="gameCanvas"></canvas>
 
@@ -20,19 +17,26 @@
         let canvas, engine, camera;
         let scene;
 
-
         window.addEventListener('DOMContentLoaded', (event) => {
             canvas = document.getElementById("gameCanvas"); // Get the canvas element
             engine = new BABYLON.Engine(canvas, true); // Generate the BABYLON 3D engine
 
             scene = new BABYLON.Scene(engine);
-            scene.clearColor = new BABYLON.Color3(0, 0, 0)
+            scene.clearColor = new BABYLON.Color4(0, 0, 0, 0);
 
-            camera = new BABYLON.ArcRotateCamera("Camera", 0, 0, 0, new BABYLON.Vector3(0, 7 * Math.PI, 0), scene);
+            // Create a large sphere for the background
+            var backgroundSphere = BABYLON.MeshBuilder.CreateSphere("backgroundSphere", { diameter: 100, segments: 32 }, scene);
+            var backgroundMaterial = new BABYLON.StandardMaterial("backgroundMaterial", scene);
+            backgroundMaterial.diffuseTexture = new BABYLON.Texture("files/back.jpg", scene);
+            backgroundMaterial.backFaceCulling = false; // Show the inside of the sphere
+            backgroundSphere.material = backgroundMaterial;
+            backgroundSphere.scaling.x = -1; // Invert sphere normals to see the texture from inside
+
+            camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2.5, 50, new BABYLON.Vector3(0, 0, 0), scene);
             camera.attachControl(canvas, true);
             camera.wheelPrecision = 50;
-            camera.lowerRadiusLimit = 1;
-            camera.upperRadiusLimit = 26;
+            camera.lowerRadiusLimit = 10;
+            camera.upperRadiusLimit = 100;
 
             let light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(1, 1, 0), scene);
             light1.intensity = 0.5;
@@ -40,7 +44,6 @@
             light2.intensity = 0.5;
             light2.parent = camera;
 
-            // const centre = new Centre()
             var sun, pivot;
             pivot = new BABYLON.TransformNode('centre', scene);
             BABYLON.SceneLoader.ImportMesh("", "files/", "sun.glb", scene, function (meshes) {
@@ -48,30 +51,36 @@
                 sun.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2);
                 sun.parent = pivot;
             });
-            
 
-            let radiuses = [1, 1, 0.5]
-            const firstEpicycle = new Epiciclo(radiuses, pivot)
-            radiuses = [4, 1, 0.5]
-            const secondEpicycle = new Epiciclo(radiuses, pivot)
-            radiuses = [5, 1, 0.5]
-            const thirdEpicycle = new Epiciclo(radiuses, pivot)
-            radiuses = [6.98, 1, 0.5]
-            const fourthEpicycle = new Epiciclo(radiuses, pivot)
-            radiuses = [11, 1, 0.5]
-            const fifthEpicycle = new Epiciclo(radiuses, pivot)
+            let radiuses = [1, 1, 0.5];
+            const firstEpicycle = new Epiciclo(radiuses, pivot);
+            radiuses = [4, 1, 0.5];
+            const secondEpicycle = new Epiciclo(radiuses, pivot);
+            radiuses = [5, 1, 0.5];
+            const thirdEpicycle = new Epiciclo(radiuses, pivot);
+            radiuses = [6.98, 1, 0.5];
+            const fourthEpicycle = new Epiciclo(radiuses, pivot);
+            radiuses = [11, 1, 0.5];
+            const fifthEpicycle = new Epiciclo(radiuses, pivot);
+            radiuses = [15, 1, 0.5];
+            const sixthEpicycle = new Epiciclo(radiuses, pivot);
+            radiuses = [16.3, 1, 0.5];
+            const seventhEpicycle = new Epiciclo(radiuses, pivot);
             let angle = 0;
 
             scene.registerBeforeRender(() => {
                 angle += 0.01;
 
-                pivot.position.x = Math.cos(angle*12);
-                pivot.position.z = Math.sin(angle * 12)
-                firstEpicycle.Animation(angle * 13.5)
-                secondEpicycle.Animation(angle * 13)
-                thirdEpicycle.Animation(angle * 2.5)
-                fourthEpicycle.Animation(angle * 2)
-                fifthEpicycle.Animation(angle)
+                pivot.position.y = Math.cos(angle * 12); // Change to y-axis for vertical alignment
+                pivot.position.z = Math.sin(angle * 12);
+
+                firstEpicycle.Animation(angle * 13.5);
+                secondEpicycle.Animation(angle * 13);
+                thirdEpicycle.Animation(angle * 2.5);
+                fourthEpicycle.Animation(angle * 2);
+                fifthEpicycle.Animation(angle);
+                sixthEpicycle.Animation(angle * 0.75);
+                seventhEpicycle.Animation(angle * 0.25);
             });
 
             // Main loop
@@ -81,43 +90,23 @@
             window.addEventListener("resize", () => engine.resize());
         });
 
-        // class Centre {
-        //     constructor() {
-        //         this.pivot = new BABYLON.TransformNode('centre', scene);
-        //         // this.sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {
-        //         //     segment: 32, diameter: 0.5
-        //         // }, scene);
-        //         this.sphere = null;
-        //         BABYLON.SceneLoader.ImportMesh("", "files/", "sun.glb", scene, function (meshes) {
-        //             sphere = meshes[0];
-        //         });
-        //         this.sphere.parent = this.pivot;
-        //     }
-
-        //     Animation(angle) {
-        //         this.pivot.position.x = Math.cos(angle);
-        //         this.pivot.position.z = Math.sin(angle)
-        //     }
-        // }
         class Epiciclo {
             constructor(radiuses, pivot) {
                 this.radiuses = radiuses;
                 this.circles = [];
                 this.pivot = pivot;
-                this.planet = BABYLON.MeshBuilder.CreateSphere("sphere", {
-                    segment: 32, diameter: 0.25
-                }, scene);
+                this.planet = BABYLON.MeshBuilder.CreateSphere("sphere", { segment: 32, diameter: 0.25 }, scene);
                 this.lines = null;
-                this.InitializeEpicycle()
+                this.InitializeEpicycle();
             }
 
             InitializeEpicycle() {
-                this.pivot.position.x = this.pivot.position.y = 0
+                this.pivot.position.x = this.pivot.position.y = 0;
                 for (let i = 0; i < 3; i++) {
                     this.circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, new circle(this.radiuses[i]).GetPoints(), scene));
                 }
-                // this.centre.parent = this.pivot;
             }
+
             Animation(angle) {
                 if (this.lines != null) {
                     this.lines.dispose();
@@ -126,32 +115,35 @@
                     this.pivot.position,
                     this.planet.position
                 ];
-                this.lines = BABYLON.MeshBuilder.CreateLines("lines", { points: points }, scene); this.circles[1].position.x = this.radiuses[0] * Math.cos(angle);
+                this.lines = BABYLON.MeshBuilder.CreateLines("lines", { points: points }, scene);
+
+                this.circles[1].position.y = this.radiuses[0] * Math.cos(angle); // Change to y-axis for vertical alignment
                 this.circles[1].position.z = this.radiuses[0] * Math.sin(angle);
 
-                this.circles[2].position.x = this.circles[1].position.x + this.radiuses[1] * Math.cos(angle * 2);
+                this.circles[2].position.y = this.circles[1].position.y + this.radiuses[1] * Math.cos(angle * 2);
                 this.circles[2].position.z = this.circles[1].position.z + this.radiuses[1] * Math.sin(angle * 2);
 
-                this.planet.position.x = this.circles[2].position.x + this.radiuses[2] * Math.cos(angle * 2);
+                this.planet.position.y = this.circles[2].position.y + this.radiuses[2] * Math.cos(angle * 2);
                 this.planet.position.z = this.circles[2].position.z + this.radiuses[2] * Math.sin(angle * 2);
             }
         }
+
         class circle {
             constructor(radius) {
-                this.radius = radius
+                this.radius = radius;
                 this.points = this.InitializeCircle();
             }
 
             InitializeCircle() {
                 let points = [];
                 for (let i = -Math.PI; i <= Math.PI; i += Math.PI / 360) {
-                    points.push(new BABYLON.Vector3(this.radius * Math.cos(i), 0, this.radius * Math.sin(i)));
+                    points.push(new BABYLON.Vector3(0, this.radius * Math.cos(i), this.radius * Math.sin(i))); // Change to y-axis for vertical alignment
                 }
                 return points;
             }
 
             GetPoints() {
-                return this.points
+                return this.points;
             }
         }
     </script>
@@ -160,8 +152,8 @@
         #gameCanvas {
             width: 100%;
             height: 100vh;
+            background-color: transparent;
         }
     </style>
 </body>
-
 </html>
