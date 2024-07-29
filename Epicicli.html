@@ -20,9 +20,10 @@
             [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(1, 0, 0, 1), new BABYLON.Color4(1, 0, 0, 1)], // Red
             [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(1, 0.65, 0, 1), new BABYLON.Color4(1, 0.65, 0, 1)], // Orange
             [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(1, 1, 0, 1), new BABYLON.Color4(1, 1, 0, 1)], // Yellow
+            [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(0, 1, 0, 1), new BABYLON.Color4(0, 1, 0, 1)], // Green
             [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(0, 0.5, 1, 1), new BABYLON.Color4(0, 0.5, 1, 1)], // Azure
-            [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(0.5, 0, 0.5, 1), new BABYLON.Color4(0.5, 0, 0.5, 1)]  // Violet
-        ];
+            [new BABYLON.Color4(0, 0, 0, 1), new BABYLON.Color4(0.5, 0, 0.5, 1), new BABYLON.Color4(0.5, 0, 0.5, 1)] // Violet
+            ];
 
         window.addEventListener('DOMContentLoaded', (event) => {
             canvas = document.getElementById("gameCanvas"); // Get the canvas element
@@ -153,8 +154,11 @@
                 this.pivot.position.x = this.pivot.position.y = 0;
                 for (let i = 0; i < 3; i++) {
                     let col = this.colors[i];
-                    this.circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, {points: new circle(this.radiuses[i]).GetPoints(), colors: [col, col]}, scene));
+                    // this.circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, {points: new circle(this.radiuses[i]).GetPoints(), colors: [col, col]}, scene));
+                    this.circles.push(BABYLON.Mesh.CreateLines("baseCircle" + i, new circle(this.radiuses[i]).GetPoints(), scene));
                 }
+                this.circles[1].color = this.circles[2].color = new BABYLON.Color3.Yellow() // Yellow
+
             }
 
             Animation(angle) {
@@ -180,14 +184,18 @@
                     this.pivot.position,
                     this.planet.position
                 ];
+                let col = new BABYLON.Color3.Red()
                 this.lineToSun = BABYLON.MeshBuilder.CreateLines("lines", { points: points }, scene);
+                this.lineToSun.color = new BABYLON.Color4(1, 0, 0, 1) // Red (fully opaque)
 
                 const pointsCentre = [
                     this.totalCentre.sphere.position,
                     this.planet.position
                 ]
                 this.lineToCentre = BABYLON.MeshBuilder.CreateLines("lines", { points: pointsCentre }, scene);
+                this.lineToCentre.color = new BABYLON.Color4(0, 0.8, 0.8, 1) // Muted Cyan (fully opaque)
 
+                
                 this.circles[1].position.y = this.circles[0].position.y + this.radiuses[0] * Math.cos(angle); // Change to y-axis for vertical alignment
                 this.circles[1].position.z = this.circles[0].position.z + this.radiuses[0] * Math.sin(angle);
 
